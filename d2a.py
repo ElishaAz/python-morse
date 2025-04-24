@@ -1,27 +1,23 @@
 import numpy as np
-import sounddevice as sd
 
 from config import *
 from utils import to_morse, DOT, DASH, SPACE
 
-sd.default.samplerate = SAMPLE_RATE
-sd.default.channels = 1
-
-
-def sin_wave(duration):
-    frames = int(duration * SAMPLE_RATE)
-    t = np.arange(frames) / SAMPLE_RATE
-    return AMPLITUDE * np.sin(2 * np.pi * FREQ * t)
-
-
-def silence(duration):
-    frames = duration * SAMPLE_RATE
-    return np.zeros(int(frames))
-
-
 class D2A:
-    def __init__(self):
-        self.wav = silence(1)
+    def __init__(self, sample_rate=SAMPLE_RATE, amplitude=AMPLITUDE):
+        self.sample_rate = sample_rate
+        self.amplitude = amplitude
+
+        self.wav = self._silence(1)
+
+    def _sin_wave(self, duration):
+        frames = int(duration * self.sample_rate)
+        t = np.arange(frames) / self.sample_rate
+        return self.amplitude * np.sin(2 * np.pi * FREQ * t)
+
+    def _silence(self, duration):
+        frames = duration * self.sample_rate
+        return np.zeros(int(frames))
 
     def _add(self, wav: np.ndarray):
         self.wav = np.append(self.wav, wav)
@@ -32,17 +28,18 @@ class D2A:
         for char in morse:
             for sym in char:
                 if sym == DOT:
-                    self._add(sin_wave(DURATION))
+                    self._add(self._sin_wave(DURATION))
                 elif sym == DASH:
-                    self._add(sin_wave(DASH_DURATION))
+                    self._add(self._sin_wave(DASH_DURATION))
                 elif sym == SPACE:
-                    self._add(silence(SPACE_DURATION))
-                self._add(silence(SYM_SPACER))
-            self._add(silence(LETTER_SPACER))
+                    self._add(self._silence(SPACE_DURATION))
+                self._add(self._silence(SYM_SPACER))
+            self._add(self._silence(LETTER_SPACER))
 
     def play(self):
+        import sounddevice as sd
         print("Playing")
-        sd.play(self.wav)
+        sd.play(self.wav, samplerate=self.sample_rate)
         sd.wait()
 
     def save(self, filename: str):
@@ -50,7 +47,7 @@ class D2A:
         write(filename, SAMPLE_RATE, self.wav)
 
     def reset(self):
-        self.wav = silence(1)
+        self.wav = self._silence(1)
 
     def get_samples(self):
         return self.wav

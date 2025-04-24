@@ -1,40 +1,33 @@
 import numpy as np
-import sounddevice as sd
 
 from config import *
 from goertzel import GoertzelSampleBySample
 from utils import DOT, DASH, SPACE, from_morse
 
-sd.default.samplerate = SAMPLE_RATE
-sd.default.channels = 1
-
-_OFF = -1
-_PENDING = 0
-_ON = 1
-
-
-def _time_for_sample(sample):
-    return sample / SAMPLE_RATE
-
 
 class A2D:
-    def __init__(self):
+    def __init__(self, sample_rate=SAMPLE_RATE):
+        self.sample_rate = sample_rate
+
         self.times = []
         self.values = []
         self.sample_count = 0
         self.goertzel = GoertzelSampleBySample(FREQ, SAMPLE_RATE, GOERTZEL_SAMPLES)
+
+    def _time_for_sample(self, sample):
+        return sample / self.sample_rate
 
     def _inject(self, samples):
         for i, sample in enumerate(samples):
             amplitude = self.goertzel.process_sample(sample)  # Returns amplitude in dB
             if amplitude is not None:
                 self.values.append(amplitude)
-                self.times.append(_time_for_sample(self.sample_count + i))
+                self.times.append(self._time_for_sample(self.sample_count + i))
                 self.goertzel.reset()
         self.sample_count += len(samples)
 
     def _callback(self, indata: np.ndarray, frames: int,
-                  time, status: sd.CallbackFlags):
+                  time, status):
         self._inject(indata.flat)
 
     def read(self, filename: str):
@@ -48,8 +41,10 @@ class A2D:
         self._inject(samples)
 
     def record(self):
-        with sd.InputStream(callback=self._callback, samplerate=SAMPLE_RATE, channels=1) as stream:
+        import sounddevice as sd
+        with sd.InputStream(callback=self._callback, samplerate=self.sample_rate, channels=1) as stream:
             self.goertzel.reset()
+            print("Recording")
             input("Press Enter to stop...\n")
         self.goertzel.reset()
 
