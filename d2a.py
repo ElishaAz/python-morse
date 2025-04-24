@@ -45,6 +45,10 @@ class D2A:
         sd.play(self.wav)
         sd.wait()
 
+    def save(self, filename: str):
+        from scipy.io.wavfile import write
+        write(filename, SAMPLE_RATE, self.wav)
+
     def reset(self):
         self.wav = silence(1)
 
