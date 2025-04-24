@@ -19,7 +19,7 @@ def silence(duration):
     return np.zeros(int(frames))
 
 
-class DAC:
+class D2A:
     def __init__(self):
         self.wav = silence(1)
 
@@ -50,6 +50,6 @@ class DAC:
 
 
 if __name__ == '__main__':
-    dac = DAC()
-    dac.encode("Hello World")
-    dac.play()
+    d2a = D2A()
+    d2a.encode("Hello World")
+    d2a.play()
