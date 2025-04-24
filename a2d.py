@@ -142,6 +142,6 @@ class A2D:
 
 if __name__ == '__main__':
     a2d = A2D()
-    a2d.read("Hello World.wav")
+    a2d.record()
     print(a2d.decode())
     a2d.plot()
