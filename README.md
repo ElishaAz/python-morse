@@ -9,3 +9,5 @@ Dependencies (sounddevice):
 ```
 pip install sounddevice numpy scipy fastgoertzel
 ```
+
+Convert a file to 16kHz mono: `ffmpeg -i <file> -ac 1 -ar 16000 <file.wav>`
