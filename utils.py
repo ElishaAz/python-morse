@@ -9,7 +9,7 @@ _morse_table = {
     'B': (DASH, DOT, DOT, DOT),
     'C': (DASH, DOT, DASH, DOT),
     'D': (DASH, DOT, DOT),
-    'E': (DOT),
+    'E': (DOT,),
     'F': (DOT, DOT, DASH, DOT),
     'G': (DASH, DASH, DOT),
     'H': (DOT, DOT, DOT, DOT),
@@ -24,7 +24,7 @@ _morse_table = {
     'Q': (DASH, DASH, DOT, DASH),
     'R': (DOT, DASH, DOT),
     'S': (DOT, DOT, DOT),
-    'T': (DASH),
+    'T': (DASH,),
     'U': (DOT, DOT, DASH),
     'V': (DOT, DOT, DOT, DASH),
     'W': (DOT, DASH, DASH),
@@ -58,6 +58,7 @@ def to_morse(message: str):
 def from_morse(morse: list[tuple[str]]) -> str:
     message = ''
     for char in morse:
+        char = tuple(char)
         if char in _inverse_morse_table:
             message += _inverse_morse_table[char]
     return message

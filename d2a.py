@@ -52,6 +52,9 @@ class D2A:
     def reset(self):
         self.wav = silence(1)
 
+    def get_samples(self):
+        return self.wav
+
 
 if __name__ == '__main__':
     d2a = D2A()
