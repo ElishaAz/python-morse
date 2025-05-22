@@ -55,5 +55,6 @@ class D2A:
 
 if __name__ == '__main__':
     d2a = D2A()
-    d2a.encode("Hello World")
+    message = input("Enter message: ").strip()
+    d2a.encode(message)
     d2a.play()
