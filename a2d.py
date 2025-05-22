@@ -77,7 +77,7 @@ class A2D:
         # Use these indexes to calculate the average and max
         max_amp = float(np.max(self.values[start_index:stop_index]))
         avg_amp = float(np.average(self.values[start_index:stop_index]))
-        high = avg_amp
+        high = avg_amp + (max_amp - avg_amp) * 0.8
 
         # Segment the values into high and low times
         is_high = False
