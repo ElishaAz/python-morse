@@ -55,5 +55,6 @@ class D2A:
 
 if __name__ == '__main__':
     d2a = D2A()
-    d2a.encode("Hello World")
-    d2a.play()
+    d2a.encode("Hello")
+    d2a.save("Hello.wav")
+    # d2a.play()

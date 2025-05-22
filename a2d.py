@@ -51,41 +51,80 @@ class A2D:
     def decode(self):
         max_amp = float(np.max(self.values))
         avg_amp = float(np.average(self.values))
-        high = (max_amp + avg_amp) / 2
 
-        # Segment the values into high and low times
-        is_high = False
-        high_start = -1
-        low_start = 0
+        eps = 10
+
+        # Segment the values into rising, falling and flat times
+
+        FALLING = "falling"
+        RISING = "rising"
+        FLAT = "flat"
+
+        state = RISING
+        last_start = 0
+
         segments = []
 
-        for i in range(len(self.values)):
+        start_index = 0
+        val = self.values[start_index]
+        while val < avg_amp:
+            start_index += 1
+            val = self.values[start_index]
+            last_start = self.times[start_index - 1]
+
+        for i in range(start_index, len(self.values)):
+            last_val = self.values[i - 1]
             val = self.values[i]
-            tim = self.times[i]
+            t = self.times[i]
 
-            if val >= high:
-                if not is_high:
-                    is_high = True
-                    high_start = tim
-
-                    if len(segments) > 0:  # discard the first segment if low
-                        low_time = high_start - low_start
-                        segments.append((False, low_time))
-
+            if val > last_val + eps:
+                if state != RISING:
+                    segments.append((state, t - last_start))
+                    state = RISING
+                    last_start = t
+            elif val + eps < last_val:
+                if state != FALLING:
+                    segments.append((state, t - last_start))
+                    state = FALLING
+                    last_start = t
             else:
-                if is_high:
-                    is_high = False
-                    low_start = tim
+                if state != FLAT:
+                    segments.append((state, t - last_start))
+                    state = FLAT
+                    last_start = t
 
-                    high_time = low_start - high_start
-                    segments.append((True, high_time))
-        if not segments[len(segments) - 1][0]:  # discard last segment if low
-            segments.pop()
+        segments_high_low = []
+
+        # Turn segments into high and low times
+        high_time = 0
+        low_time = 0
+        is_rising = False
+        for state, t in segments:
+            if state == RISING:
+                if not is_rising:
+                    is_rising = True
+                    segments_high_low.append((False, low_time))
+                    low_time = 0
+                    high_time = t
+            if state == FALLING:
+                if is_rising:
+                    is_rising = False
+                    segments_high_low.append((True, high_time))
+                    high_time = 0
+                    low_time = 0
+
+            if is_rising:
+                high_time += t
+            else:
+                low_time += t
+
+        print(segments)
+        print(segments_high_low)
 
         # Turn segments into dots and dashes
         morse = []
         current_letter = []
-        for is_high, time in segments:
+        for is_high, time in segments_high_low:
             if is_high:
                 if time < (DURATION + DASH_DURATION) / 2:
                     current_letter.append(DOT)
@@ -143,5 +182,6 @@ class A2D:
 if __name__ == '__main__':
     a2d = A2D()
     a2d.record()
+    # a2d.read("Hello.wav")
     print(a2d.decode())
     a2d.plot()
