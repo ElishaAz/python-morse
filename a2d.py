@@ -48,10 +48,36 @@ class A2D:
             input("Press Enter to stop...\n")
         self.goertzel.reset()
 
-    def decode(self):
-        max_amp = float(np.max(self.values))
+    def _get_interesting_block(self):
         avg_amp = float(np.average(self.values))
-        high = (max_amp + avg_amp) / 2
+
+        # Find first index over the average
+        start_index = 0
+        val = self.values[start_index]
+        while val < avg_amp:
+            start_index += 1
+            val = self.values[start_index]
+
+        start_index = max(start_index - 1, 0)
+
+        # Find last index over the average
+        stop_index = len(self.values)
+        val = self.values[stop_index - 1]
+        while val < avg_amp:
+            stop_index -= 1
+            val = self.values[stop_index - 1]
+
+        stop_index = min(stop_index + 1, len(self.values))
+
+        return start_index, stop_index
+
+    def decode(self):
+        start_index, stop_index = self._get_interesting_block()
+
+        # Use these indexes to calculate the average and max
+        max_amp = float(np.max(self.values[start_index:stop_index]))
+        avg_amp = float(np.average(self.values[start_index:stop_index]))
+        high = avg_amp
 
         # Segment the values into high and low times
         is_high = False
@@ -59,7 +85,7 @@ class A2D:
         low_start = 0
         segments = []
 
-        for i in range(len(self.values)):
+        for i in range(start_index, stop_index):
             val = self.values[i]
             tim = self.times[i]
 
@@ -110,24 +136,11 @@ class A2D:
 
     def plot(self):
         import matplotlib.pyplot as plt
-        max_amp = float(np.max(self.values))
-        avg_amp = float(np.average(self.values))
-        high = (max_amp + avg_amp) / 2
 
-        first = 0
-        for i, v in enumerate(self.values):
-            if v > high:
-                first = i
-                break
+        start_index, stop_index = self._get_interesting_block()
 
-        last = len(self.values)
-        for i in range(len(self.values), first, -1):
-            if self.values[i - 1] > high:
-                last = i
-                break
-
-        values = self.values[first:last]
-        times = self.times[first:last]
+        values = self.values[start_index:stop_index]
+        times = self.times[start_index:stop_index]
 
         plt.plot(times, values, marker='o')
         plt.grid(True)
@@ -142,6 +155,7 @@ class A2D:
 
 if __name__ == '__main__':
     a2d = A2D()
-    a2d.record()
+    a2d.read("Hello_noise.wav")
+    # a2d.record()
     print(a2d.decode())
     a2d.plot()
